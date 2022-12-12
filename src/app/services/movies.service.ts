@@ -1,16 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { MovieDto } from '../models/movie';
+import { Movie, MovieCredits, MovieDto, MovieImages, MovieVideoDto } from '../models/movie';
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { TvDto } from '../models/tv';
+import { GenresDto } from '../models/genre';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MoviesService {
   baseUrl: string = 'https://api.themoviedb.org/3';
-  apiKey: string = '8c247ea0b4b56ed2ff7d41c9a833aa77';
+  apiKey: string = 'c979947423deaaa5840f4b97f1e55177';
 
   constructor(private http: HttpClient) {}
 
@@ -22,12 +23,56 @@ export class MoviesService {
     );
   }
 
-  searchMovies(page: number) {
-    return this.http.get<MovieDto>(`${this.baseUrl}/movie/popular?page=${page}&api_key=${this.apiKey}`).pipe(
+  getMovie(id: string) {
+    return this.http.get<Movie>(`${this.baseUrl}/movie/${id}?api_key=${this.apiKey}`);
+  }
+
+  getMovieVideos(id: string) {
+    return this.http
+      .get<MovieVideoDto>(`${this.baseUrl}/movie/${id}/videos?api_key=${this.apiKey}`)
+      .pipe(
+        switchMap((res) => {
+          return of(res.results);
+        })
+      );
+  }
+
+  getMoviesGenres() {
+    return this.http.get<GenresDto>(`${this.baseUrl}/genre/movie/list?api_key=${this.apiKey}`).pipe(
       switchMap((res) => {
-        return of(res.results);
+        return of(res.genres);
       })
     );
+  }
+
+  getMovieImages(id: string) {
+    return this.http.get<MovieImages>(`${this.baseUrl}/movie/${id}/images?api_key=${this.apiKey}`);
+  }
+
+  getMovieCredits(id: string) {
+    return this.http.get<MovieCredits>(
+      `${this.baseUrl}/movie/${id}/credits?api_key=${this.apiKey}`
+    );
+  }
+
+  getMovieSimilar(id: string) {
+    return this.http
+      .get<MovieDto>(`${this.baseUrl}/movie/${id}/similar?api_key=${this.apiKey}`)
+      .pipe(
+        switchMap((res) => {
+          return of(res.results.slice(0, 12));
+        })
+      );
+  }
+
+  searchMovies(page: number) {
+    return this.http
+      .get<MovieDto>(`${this.baseUrl}/movie/popular?page=${page}&api_key=${this.apiKey}`)
+      .pipe(
+        switchMap((res) => {
+          return of(res.results);
+        })
+      );
   }
 
   getTvs(type: string = 'latest', count: number = 12) {
